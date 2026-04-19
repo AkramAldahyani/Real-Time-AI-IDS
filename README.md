@@ -59,11 +59,11 @@ A fully isolated virtual lab was designed and built using **Oracle VirtualBox** 
 
 ### Virtual Machines
 
-| VM | OS | Role | IP Address |
-|----|-----|------|------------|
-| **Attacker** | Kali Linux 2024 | Launches SYN floods, UDP floods, port scans using `hping3`, `nping` | `192.168.22.14` |
-| **Target Server** | Windows Server 2022 | Hosts HTTP/SMB services — the attack target | `192.168.22.12` |
-| **Normal Client** | Windows 10 | Generates benign browsing, file transfer, and SSH traffic | `192.168.22.10` |
+| VM | OS | Role |
+|----|-----|------|
+| **Attacker** | Kali Linux 2024 | Launches SYN floods, UDP floods, port scans using `hping3`, `nping` |
+| **Target Server** | Windows Server 2022 | Hosts HTTP/SMB services — the attack target |
+| **Normal Client** | Windows 10 | Generates benign browsing, file transfer, and SSH traffic |
 
 ### Network Topology
 
