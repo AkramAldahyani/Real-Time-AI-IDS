@@ -3,3 +3,4 @@
 *.pcapng
 myenv/
 *.env
+__pycache__/

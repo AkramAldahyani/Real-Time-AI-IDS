@@ -1,195 +1,368 @@
-# AI-Enabled Intrusion Detection System
-### Real Time IDS 
+# 🛡️ AI-Enabled Network Intrusion Detection System
+
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-RandomForest-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)
+![Scapy](https://img.shields.io/badge/Scapy-Live%20Capture-009688?style=for-the-badge)
+![Tkinter](https://img.shields.io/badge/Tkinter-GUI-blue?style=for-the-badge)
+![Accuracy](https://img.shields.io/badge/Model%20Accuracy-99.99%25-brightgreen?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
+**An end-to-end Machine Learning pipeline for real-time network intrusion detection — from isolated lab design and custom dataset generation to a trained Random Forest model and a live-capture GUI.**
+
+[Overview](#-overview) • [Pipeline](#-full-pipeline) • [Dataset](#-dataset) • [Models](#-model-results) • [IDS Tool](#-ids-tool) • [Setup](#-setup--usage) • [Results](#-results)
+
+</div>
 
 ---
 
-## Project Context
+## 📌 Overview
 
-This IDS is the final component of a complete AI cybersecurity pipeline:
+This project implements a complete **AI-powered Network Intrusion Detection System (NIDS)** built from scratch — including a custom isolated virtual lab, self-generated network traffic, a preprocessed and balanced dataset, five trained ML models, and a deployable Python IDS application with a real-time GUI.
 
-| Stage | What was done |
-|-------|--------------|
-| Lab Design | Kali Linux (attacker) · Windows 10 (client) · Windows Server 2022 (target) on isolated internal network |
-| Traffic Generation | Normal traffic from Windows 10; SYN/UDP flood attacks from Kali |
-| Feature Extraction | CICFlowMeter converted PCAPs → CSV with 84 flow features |
-| Preprocessing | Dropped identity columns, selected 17 features, cleaned NaN/Inf, applied SMOTE |
-| Model Training | Trained 5 ML models; Random Forest achieved **99.99% accuracy** |
-| **IDS** | **This tool – loads the trained RF model, captures live traffic, classifies flows in real-time** |
+The system classifies network flows as **Normal** or **Attack** (SYN flood / DDoS) with **99.99% accuracy** using a Random Forest classifier trained on 302,757 CICFlowMeter flow records generated entirely within a controlled lab environment.
 
----
+### Key Highlights
 
-## File Structure
-
-```
-ids/
-├── ids_main.py          ← Full IDS with live capture + Tkinter GUI  (PRIMARY SUBMISSION FILE)
-├── ids_test.py          ← Headless test to verify model pipeline
-├── requirements.txt     ← Python dependencies
-├── README.md            ← This file
-│
-│   ── Produced by your ML training script ──
-├── ids_model.pkl        ← Trained Random Forest model
-├── ids_scaler.pkl       ← Fitted StandardScaler
-└── ids_features.pkl     ← Ordered list of 17 feature names
-```
-
-> **All six files (three .py + three .pkl) must be in the same directory.**
+- 🔬 **Custom dataset** — captured from a real isolated VirtualBox lab (not a public dataset)
+- 🧠 **5 ML models** trained and compared — Random Forest selected as best
+- ⚡ **Live IDS** — real-time packet capture, flow extraction, and classification
+- 📊 **CSV analysis mode** — classify any CICFlowMeter-format CSV through the GUI
+- 🎯 **99.99% accuracy** with balanced SMOTE training
 
 ---
 
-## The 17 Features (must match training exactly)
+## 🏗️ Full Pipeline
+
+The project follows a complete end-to-end ML pipeline for cybersecurity:
 
 ```
-Flow Duration, Tot Fwd Pkts, Tot Bwd Pkts,
-TotLen Fwd Pkts, TotLen Bwd Pkts,
-Fwd Pkt Len Mean, Bwd Pkt Len Mean,
-Fwd IAT Mean, Bwd IAT Mean,
-Fwd Header Len, Bwd Header Len,
-FIN Flag Cnt, SYN Flag Cnt, RST Flag Cnt,
-PSH Flag Cnt, ACK Flag Cnt, URG Flag Cnt
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FULL PIPELINE                               │
+│                                                                     │
+│  1. Lab Design        →   Isolated VirtualBox network topology      │
+│  2. Traffic Gen       →   Normal + attack traffic generation        │
+│  3. PCAP Capture      →   Wireshark / tcpdump on all interfaces     │
+│  4. Feature Extract   →   CICFlowMeter: PCAP → 84-feature CSV      │
+│  5. Preprocessing     →   Clean, select 17 features, SMOTE         │
+│  6. Model Training    →   5 ML models trained and compared          │
+│  7. IDS Deployment    →   Real-time GUI with live RF classification │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-
-These are identical to the features selected in the training script (`keep_cols` in the ML code).
 
 ---
 
-## Installation
+## 🖥️ Stage 1 — Lab Design & Network Topology
 
-### Step 1 – Python version
-Requires **Python 3.9 or higher**.  Verify:
+A fully isolated virtual lab was designed and built using **Oracle VirtualBox** with an **Internal Network adapter** (no internet, no host access) to ensure ethical and contained attack simulation.
+
+### Virtual Machines
+
+| VM | OS | Role | IP Address |
+|----|-----|------|------------|
+| **Attacker** | Kali Linux 2024 | Launches SYN floods, UDP floods, port scans using `hping3`, `nping` | `192.168.22.14` |
+| **Target Server** | Windows Server 2022 | Hosts HTTP/SMB services — the attack target | `192.168.22.12` |
+| **Normal Client** | Windows 10 | Generates benign browsing, file transfer, and SSH traffic | `192.168.22.10` |
+
+### Network Topology
+
+```
+  ┌──────────────────────────────────────────────────┐
+  │           VirtualBox Internal Network            │
+  │              (192.168.22.0/24)                   │
+  │                                                  │
+  │   ┌──────────────┐      ┌──────────────────┐    │
+  │   │  Kali Linux  │      │  Windows Server  │    │
+  │   │  (Attacker)  │─────▶│  2022 (Target)   │    │
+  │   │ 192.168.22.14│      │  192.168.22.12   │    │
+  │   └──────────────┘      └──────────────────┘    │
+  │                                   ▲              │
+  │   ┌──────────────┐                │              │
+  │   │  Windows 10  │────────────────┘              │
+  │   │  (Client)    │   Normal Traffic              │
+  │   │ 192.168.22.10│                               │
+  │   └──────────────┘                               │
+  └──────────────────────────────────────────────────┘
+```
+
+> ⚠️ All attacks were conducted exclusively within this isolated environment. No external systems were affected.
+
+---
+
+## 🚦 Stage 2 — Traffic Generation
+
+### Normal Traffic (Windows 10 → Windows Server)
+Simulated realistic user behaviour using automated scripts:
+- HTTP/HTTPS web requests via `curl` and browser automation
+- File transfers (SMB/FTP)
+- Ping and basic connectivity tests
+
+### Attack Traffic (Kali Linux → Windows Server)
+Two categories of attacks were simulated using Kali tools:
+
+| Attack Type | Tool | Command |
+|-------------|------|---------|
+| **SYN Flood** | `hping3` | `sudo hping3 -S --flood -p 80 192.168.22.12` |
+| **UDP Flood** | `nping` | `sudo nping --udp --rate 1000 -p 53 192.168.22.12` |
+| **Port Scan** | `nmap` | `nmap -sS -p- 192.168.22.12` |
+
+### Traffic Capture
+All traffic was captured using **Wireshark** (packet capture to `.pcap`) then converted to flow-level CSV using **CICFlowMeter**, producing 84 network flow features per row.
+
+---
+
+## 🔧 Stage 3 — Feature Engineering & Preprocessing
+
+### Feature Extraction
+Raw PCAP files were processed through **CICFlowMeter** to extract flow-level features. From 84 available features, **17 were selected** based on their relevance to attack detection:
+
+```python
+keep_cols = [
+    'Flow Duration',
+    'Tot Fwd Pkts',     'Tot Bwd Pkts',
+    'TotLen Fwd Pkts',  'TotLen Bwd Pkts',
+    'Fwd Pkt Len Mean', 'Bwd Pkt Len Mean',
+    'Fwd IAT Mean',     'Bwd IAT Mean',
+    'Fwd Header Len',   'Bwd Header Len',
+    'FIN Flag Cnt',     'SYN Flag Cnt',     'RST Flag Cnt',
+    'PSH Flag Cnt',     'ACK Flag Cnt',     'URG Flag Cnt',
+]
+```
+
+These features capture the most discriminative properties of SYN floods and DDoS attacks:
+- **SYN Flag Cnt** — SYN floods show high SYN counts with no corresponding ACKs
+- **Flow Duration** — attack micro-flows are extremely short
+- **Tot Fwd/Bwd Pkts** — flood flows are often unidirectional
+- **IAT (Inter-Arrival Time)** — flooding produces very regular, minimal inter-arrival times
+
+### Preprocessing Steps
+
+```
+Raw CSV (302,757 rows × 84 cols)
+        │
+        ▼ Drop identity columns (Flow ID, IP, Port, Timestamp)
+        ▼ Select 17 relevant features
+        ▼ Replace Inf / -Inf → NaN
+        ▼ Coerce all columns to numeric
+        ▼ Drop columns with >50% missing
+        ▼ Fill remaining NaN → 0
+        │
+        ▼ Train/Test Split  (70% / 30%, stratified)
+        ▼ StandardScaler  (fit on train only)
+        ▼ SMOTE  (balance: 142,776 Normal + 142,776 Attack)
+        │
+        ▼ Ready for model training
+```
+
+### Dataset Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total flows | 302,757 |
+| Normal (Label=0) | 203,966 (67.4%) |
+| Attack (Label=1) | 98,791 (32.6%) |
+| Features used | 17 |
+| Train size (after SMOTE) | 285,552 (balanced) |
+| Test size | 90,828 |
+
+---
+
+## 🤖 Stage 4 — Model Training & Selection
+
+Five ML models were implemented and compared:
+
+### Model Results
+
+| Model | Accuracy | Precision | Recall | F1-Score |
+|-------|----------|-----------|--------|----------|
+| **Random Forest** ✅ | **99.99%** | **1.00** | **1.00** | **1.00** |
+| Decision Tree | 99.96% | 1.00 | 1.00 | 1.00 |
+| XGBoost | 99.97% | 1.00 | 1.00 | 1.00 |
+| K-Nearest Neighbours | 99.87% | 1.00 | 1.00 | 1.00 |
+| Logistic Regression | 97.23% | 0.97 | 0.97 | 0.97 |
+
+### Why Random Forest was selected
+
+Random Forest was chosen as the final IDS model for several reasons:
+- **Highest accuracy** (99.99%) on the held-out test set
+- **Ensemble averaging** across 100 decision trees makes it robust to overfitting
+- **No feature scaling sensitivity** — though we scale for consistency with training
+- **Probability outputs** — `predict_proba()` gives confidence scores shown in the GUI
+- **Interpretable** — feature importances can be extracted to explain decisions
+- **Fast inference** — classifies flows in microseconds, suitable for real-time use
+
+### Classification Report (Random Forest on test set)
+
+```
+              precision    recall  f1-score   support
+
+      Normal       1.00      1.00      1.00     61190
+      Attack       1.00      1.00      1.00     29638
+
+    accuracy                           1.00     90828
+   macro avg       1.00      1.00      1.00     90828
+weighted avg       1.00      1.00      1.00     90828
+
+Accuracy: 0.9999889901792399
+```
+
+---
+
+## 🛡️ Stage 5 — IDS Tool
+
+The trained model is deployed as a Python application with a **Tkinter GUI** supporting two operational modes:
+
+### Mode 1 — Live Capture (`ids_main.py`)
+
+Real-time packet capture using **Scapy**, flow extraction matching CICFlowMeter's methodology, and instant RF classification.
+
+**Architecture:**
+```
+Live Packets (Scapy sniff)
+        │
+        ▼
+  FlowManager
+  ├─ Directional 5-tuple key (src_ip, src_port, dst_ip, dst_port, proto)
+  ├─ Accumulates: lengths, IATs, TCP flags, header sizes
+  ├─ Exports on: idle timeout (2s) | FIN/RST flag | 50-packet flood guard
+        │
+        ▼
+  ClassifierWorker (background thread)
+  ├─ Builds 17-feature vector in training order
+  ├─ StandardScaler.transform()
+  └─ RandomForest.predict() + predict_proba()
+        │
+        ▼
+  Tkinter GUI (polls every 150ms)
+  ├─ Colour-coded flow table (red=ATTACK, green=Normal)
+  ├─ Live stats: Total / Normal / Attacks / Attack Rate
+  └─ Timestamped alert log
+```
+
+**Key design decision — directional flow keys:**
+CICFlowMeter treats each direction as its own flow. When `hping3 --flood` fires SYN probes with random source ports, each probe becomes a *separate* `FlowRecord` with `SYN=1, Fwd Pkts=1, Duration≈500µs` — exactly matching the attack pattern in the training data.
+
+### Mode 2 — CSV Analysis (`ids_csv.py`)
+
+Upload any CICFlowMeter-format CSV and classify all rows instantly. No live capture, no admin privileges required.
+
+**Features:**
+- File browser dialog
+- Background processing thread (GUI stays responsive)
+- Colour-coded results table with sorting
+- Summary stats (Total / Normal / Attacks / Attack Rate)
+- Export classified results as a new CSV
+
+### GUI Screenshots
+
+| Live Capture Mode | CSV Analysis Mode |
+|:-----------------:|:-----------------:|
+| Real-time flow table with red/green rows | Upload CSV → instant batch classification |
+| Stats bar: Total / Normal / Attacks / Rate | Export results with Prediction + Confidence columns |
+
+---
+
+
+## ⚙️ Setup & Usage
+
+### Prerequisites
+
+- Python 3.9 or higher
+- Windows: Run CMD as **Administrator** for live capture
+- Linux/Kali: Run with **sudo** for live capture
+
+### Installation
+
 ```bash
-python --version
-```
+# Clone the repository
+git clone https://github.com/AkramAldahyani/Real-Time-AI-IDS
+cd ai-ids-project
 
-### Step 2 – Install dependencies
+# Install dependencies
+pip install -r requirements.txt
 
-**Linux / Kali (recommended for live capture):**
-```bash
+# On Kali/Linux
 pip install -r requirements.txt --break-system-packages
 ```
 
-**Windows (run CMD as Administrator):**
-```cmd
-pip install -r requirements.txt
-```
+### Verify Model Pipeline
 
-### Step 3 – Verify .pkl files are present
-```
-ids_model.pkl
-ids_scaler.pkl
-ids_features.pkl
-```
-These are produced by running the training script (`ids_train.py` / your ML notebook).  Copy them into the same folder as the IDS `.py` files.
-
-### Step 4 – Verify everything with the test script (no root needed)
 ```bash
 python ids_test.py
 ```
+
 Expected output:
 ```
-✓  ids_model.pkl    loaded
-✓  ids_scaler.pkl   loaded
-✓  ids_features.pkl loaded
+✓  ids_model.pkl    loaded  (RandomForestClassifier)
+✓  ids_scaler.pkl   loaded  (StandardScaler)
+✓  ids_features.pkl loaded  (17 features)
 ✓  Feature list matches the 17 training features exactly.
 ✓  Predicted: ATTACK   (99.x% conf)   [expected: ATTACK]
 ✓  Predicted: Normal   (99.x% conf)   [expected: Normal]
 All checks passed.
 ```
 
----
+### Run Live Capture IDS
 
-## Running the IDS
-
-### Full Live Capture (requires root / Administrator)
-
-**On Kali Linux (monitoring your lab):**
 ```bash
+# Linux / Kali
 sudo python ids_main.py
-```
 
-**On Windows Server (monitoring from the target):**
-```
-Right-click CMD → "Run as administrator"
+# Windows (run CMD as Administrator)
 python ids_main.py
 ```
 
-## How to Use the GUI
+1. Select your network interface from the dropdown
+2. Click **▶ Start Capture**
+3. Watch flows classified in real time — red rows = ATTACK, green = Normal
+4. Click **■ Stop** when done
 
-1. **Launch** the application with the command above.
-2. **Select interface** from the dropdown:
-   - On Kali/Linux: typically `eth0` or `ens33` (the interface on your lab network)
-   - On Windows: look for "Ethernet" or "Local Area Connection" names
-3. **Click "▶ Start Capture"** – the status indicator turns green.
-4. Watch the **flow table** populate with classified flows.
-   - Green rows = **Normal** traffic
-   - Red rows = **ATTACK** detected
-5. Watch the **Alert Log** at the bottom for timestamped attack warnings.
-6. **Stats bar** at the top shows Total Flows / Normal / Attacks / Attack Rate live.
-7. **Click "■ Stop"** when done.  **"🗑 Clear"** resets the display.
+### Run CSV Analysis Mode
 
----
-
-## Selecting the Correct Network Interface
-
-### On Kali Linux
 ```bash
-ip a         # list all interfaces
+python ids_csv.py
 ```
-Look for the interface connected to your internal/host-only network, e.g.:
-- `eth0` – most common in VirtualBox
-- `ens33` / `ens34` – VMware
-- `enp0s3` – VirtualBox alternative
 
-Use that exact name in the dropdown.
+1. Click **📂 Browse CSV** and select a CICFlowMeter `.csv` file
+2. Click **▶ Classify**
+3. View colour-coded results and summary statistics
+4. Click **💾 Export Results CSV** to save predictions
 
-### On Windows
-Open Device Manager → Network Adapters, or:
-```cmd
-ipconfig /all
-```
-The IDS dropdown will show the same names as Scapy detects (e.g., `\Device\NPF_{GUID}`).
 
 
 ---
 
-## Common Errors and Fixes
+## 🔧 Troubleshooting
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `FileNotFoundError: Missing artifact: 'ids_model.pkl'` | .pkl files not in same folder | Copy all three .pkl files next to ids_main.py |
-| `Permission denied` / `Operation not permitted` | Not running as root/Admin | Run with `sudo` on Linux; "Run as administrator" on Windows |
-| `ImportError: No module named 'scapy'` | Scapy not installed | `pip install scapy --break-system-packages` |
-| `No interfaces listed` | Scapy not installed or no permissions | Install scapy and run as root |
-| GUI does not open / `_tkinter` error | tkinter not installed | `sudo apt install python3-tk` on Kali |
-| Flows appear but all predicted "Normal" | Wrong interface selected | Make sure you pick the interface on the same subnet as your lab VMs |
-| `ImportError: cannot import name 'SMOTE'` | imbalanced-learn not installed | `pip install imbalanced-learn --break-system-packages` |
+| `Missing: 'ids_model.pkl'` | .pkl files not found | Place all three `.pkl` files in the same directory as the `.py` script |
+| `Permission denied` | Not running as root/Admin | `sudo python ids_main.py` on Linux; run CMD as Administrator on Windows |
+| `No module named 'scapy'` | Scapy not installed | `pip install scapy --break-system-packages` |
+| All flows show "Normal" during attack | Wrong interface selected | Select the interface on the same subnet as your lab VMs |
+| `_tkinter` error on Kali | tkinter not installed | `sudo apt install python3-tk` |
+| `No module named 'imbalanced_learn'` | imblearn not installed | `pip install imbalanced-learn --break-system-packages` |
 
 ---
 
-## Architecture Overview
+## 📦 Dependencies
 
 ```
-Live Packets (Scapy sniff)
-        │
-        ▼
-  FlowManager              ← Groups packets into bidirectional flows by 5-tuple
-  (per-flow stats)         ← Tracks packet lengths, IATs, TCP flag counts
-        │
-        │  (flow expires after 5s idle)
-        ▼
-  flow_queue (Queue)
-        │
-        ▼
-  ClassifierWorker         ← Background thread
-        │
-        ├─ Build 17-feature vector (same order as training)
-        ├─ Apply StandardScaler (loaded from ids_scaler.pkl)
-        └─ Random Forest predict (loaded from ids_model.pkl)
-                │
-                ▼
-         gui_queue (Queue)
-                │
-                ▼
-        Tkinter GUI          ← Polls every 200ms, updates table + log + stats
+scapy>=2.5.0           # Packet capture and dissection
+scikit-learn>=1.3.0    # Random Forest, StandardScaler
+imbalanced-learn>=0.11.0  # SMOTE for class balancing
+joblib>=1.3.0          # Model serialisation (.pkl)
+numpy>=1.24.0          # Numerical computation
+pandas>=2.0.0          # Data manipulation
 ```
 
+---
+
+## 👤 Author
+
+Built as part of **IT8520 – Digital Transformation** coursework.
+
+*End-to-end implementation: lab design → data generation → preprocessing → model training → IDS deployment.*
+
+---
