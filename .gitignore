@@ -1,0 +1,5 @@
+*.csv
+*.pcap
+*.pcapng
+myenv/
+*.env

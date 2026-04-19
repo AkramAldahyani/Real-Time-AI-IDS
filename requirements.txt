@@ -1,0 +1,10 @@
+# IDS – Python dependencies
+# Install with:  pip install -r requirements.txt
+# On Linux/Kali: pip install -r requirements.txt --break-system-packages
+
+scapy>=2.5.0
+scikit-learn>=1.3.0
+imbalanced-learn>=0.11.0
+joblib>=1.3.0
+numpy>=1.24.0
+pandas>=2.0.0
