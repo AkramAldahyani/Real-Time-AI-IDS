@@ -75,13 +75,13 @@ A fully isolated virtual lab was designed and built using **Oracle VirtualBox** 
   │   ┌──────────────┐      ┌──────────────────┐     │
   │   │  Kali Linux  │      │  Windows Server  │     │
   │   │  (Attacker)  │─────>│  2022 (Target)   │     │
-  │   │ 192.168.22.14│      │  192.168.22.12   │     │
+  │   │              │      │                  │     │
   │   └──────────────┘      └──────────────────┘     │
   │                                   ▲              │
   │   ┌──────────────┐                │              │
   │   │  Windows 10  │────────────────┘              │
   │   │  (Client)    │   Normal Traffic              │
-  │   │ 192.168.22.10│                               │
+  │   │              │                               │
   │   └──────────────┘                               │
   └──────────────────────────────────────────────────┘
 ```
@@ -103,9 +103,9 @@ Two categories of attacks were simulated using Kali tools:
 
 | Attack Type | Tool | Command |
 |-------------|------|---------|
-| **SYN Flood** | `hping3` | `sudo hping3 -S --flood -p 80 192.168.22.12` |
-| **UDP Flood** | `nping` | `sudo nping --udp --rate 1000 -p 53 192.168.22.12` |
-| **Port Scan** | `nmap` | `nmap -sS -p- 192.168.22.12` |
+| **SYN Flood** | `hping3` | `sudo hping3 -S --flood -p 80 $SERVER_IP` |
+| **UDP Flood** | `nping` | `sudo nping --udp --rate 1000 -p 53 $SERVER_IP` |
+| **Port Scan** | `nmap` | `nmap -sS -p- $SERVER_IP` |
 
 ### Traffic Capture
 All traffic was captured using **Wireshark** (packet capture to `.pcap`) then converted to flow-level CSV using **CICFlowMeter**, producing 84 network flow features per row.
