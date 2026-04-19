@@ -44,8 +44,8 @@ The project follows a complete end-to-end ML pipeline for cybersecurity:
 │  1. Lab Design        →   Isolated VirtualBox network topology      │
 │  2. Traffic Gen       →   Normal + attack traffic generation        │
 │  3. PCAP Capture      →   Wireshark / tcpdump on all interfaces     │
-│  4. Feature Extract   →   CICFlowMeter: PCAP → 84-feature CSV      │
-│  5. Preprocessing     →   Clean, select 17 features, SMOTE         │
+│  4. Feature Extract   →   CICFlowMeter: PCAP → 84-feature CSV       │
+│  5. Preprocessing     →   Clean, select 17 features, SMOTE          │
 │  6. Model Training    →   5 ML models trained and compared          │
 │  7. IDS Deployment    →   Real-time GUI with live RF classification │
 └─────────────────────────────────────────────────────────────────────┘
@@ -72,11 +72,11 @@ A fully isolated virtual lab was designed and built using **Oracle VirtualBox** 
   │           VirtualBox Internal Network            │
   │              (192.168.22.0/24)                   │
   │                                                  │
-  │   ┌──────────────┐      ┌──────────────────┐    │
-  │   │  Kali Linux  │      │  Windows Server  │    │
-  │   │  (Attacker)  │─────▶│  2022 (Target)   │    │
-  │   │ 192.168.22.14│      │  192.168.22.12   │    │
-  │   └──────────────┘      └──────────────────┘    │
+  │   ┌──────────────┐      ┌──────────────────┐     │
+  │   │  Kali Linux  │      │  Windows Server  │     │
+  │   │  (Attacker)  │─────>│  2022 (Target)   │     │
+  │   │ 192.168.22.14│      │  192.168.22.12   │     │
+  │   └──────────────┘      └──────────────────┘     │
   │                                   ▲              │
   │   ┌──────────────┐                │              │
   │   │  Windows 10  │────────────────┘              │
