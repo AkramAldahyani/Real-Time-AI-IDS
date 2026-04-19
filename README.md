@@ -1,5 +1,5 @@
 # AI-Enabled Intrusion Detection System
-### Module: Digital Transformation | Group Project – IDS Component
+### Real Time IDS 
 
 ---
 
