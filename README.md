@@ -67,24 +67,7 @@ A fully isolated virtual lab was designed and built using **Oracle VirtualBox** 
 
 ### Network Topology
 
-```
-  ┌──────────────────────────────────────────────────┐
-  │           VirtualBox Internal Network            │
-  │              (192.168.22.0/24)                   │
-  │                                                  │
-  │   ┌──────────────┐      ┌──────────────────┐     │
-  │   │  Kali Linux  │      │  Windows Server  │     │
-  │   │  (Attacker)  │─────>│  2022 (Target)   │     │
-  │   │              │      │                  │     │
-  │   └──────────────┘      └──────────────────┘     │
-  │                                   ▲              │
-  │   ┌──────────────┐                │              │
-  │   │  Windows 10  │────────────────┘              │
-  │   │  (Client)    │   Normal Traffic              │
-  │   │              │                               │
-  │   └──────────────┘                               │
-  └──────────────────────────────────────────────────┘
-```
+<img src="screenshots/net_diagram.png" width="1050"/>
 
 > ⚠️ All attacks were conducted exclusively within this isolated environment. No external systems were affected.
 
@@ -256,10 +239,13 @@ Upload any CICFlowMeter-format CSV and classify all rows instantly. No live capt
 
 ### GUI Screenshots
 
-| Live Capture Mode | CSV Analysis Mode |
-|:-----------------:|:-----------------:|
-| Real-time flow table with red/green rows | Upload CSV → instant batch classification |
-| Stats bar: Total / Normal / Attacks / Rate | Export results with Prediction + Confidence columns |
+**Attack Traffic Detected:**
+
+<img src="screenshots/attack_captured.png" width="1050"/>
+
+**Normal Traffic:**
+
+<img src="screenshots/normal_traffic.png" width="1050"/>
 
 ---
 
